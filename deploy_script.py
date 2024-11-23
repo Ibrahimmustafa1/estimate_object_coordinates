@@ -149,11 +149,7 @@ def estimate_nearest_object_within_distance(
 
     # Return only the nearest object (if no object is found within threshold, return None)
     return nearby_objects_sorted[0] if nearby_objects_sorted else None
-    # Sort by reduced depth (ascending order), so the closest objects come first
-    nearby_objects_sorted = sorted(nearby_objects, key=lambda x: x[2])
 
-    # Select the 2 nearest objects (if there are fewer than 2, return all of them)
-    return nearby_objects_sorted[:2]
 
 def draw_bounding_boxes(image, objects):
     """
@@ -279,36 +275,38 @@ def prepare_json_file(file_path ,image_path):
                     obj.pop('classification_id', None)
                     obj.pop('type', None)
         else:
-            raise ValueError('No result found in the json file')
+             print('No result found in the json file')
+             return
     return data
 
 
-js_file = "file_path"
+js_file = "json_file"
 im_path = "image_path"
 sensor_width_mm = 12.35
 sensor_height_mm = 9.63
 image = Image.open(im_path)
-depth_map = estimate_depth_map(image)
 config = prepare_json_file(js_file,im_path)
+depth_map = estimate_depth_map(image)
 light_poles_coordinates = []
 near_objects = []
 reduced_depths = []
-nearest_object = main(
-    config["image_path"],
-    depth_map,
-    config["focal_length"],
-    float(config["latitude_origin"]),
-    float(config["longitude_origin"]),
-    config["bearing"],
-    12.35,
-    9.63,
-    config['result']
-)
-if nearest_object:
-    nearest_coordinates, bbox, reduced_depth = nearest_object
-    visualize_image_with_boxes(im_path,config['result'])
-    visualize_image_with_boxes(im_path, [bbox])
-    print("Light pole predicted Cordinates : " ,nearest_coordinates)
-else:
-    print("No nearby object found within the distance threshold.")
-
+if config:
+    nearest_object = main(
+        config["image_path"],
+        depth_map,
+        config["focal_length"],
+        float(config["latitude_origin"]),
+        float(config["longitude_origin"]),
+        config["bearing"],
+        12.35,
+        9.63,
+        config['result']
+    )
+    print(nearest_object)
+    if nearest_object:
+        nearest_coordinates, bbox, reduced_depth = nearest_object
+        visualize_image_with_boxes(im_path,config['result'])
+        visualize_image_with_boxes(im_path, [bbox])
+        print("Light pole predicted Cordinates : " ,nearest_coordinates)
+    else:
+        print("No nearby object found within the distance threshold.")
